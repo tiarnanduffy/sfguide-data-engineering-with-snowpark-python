@@ -1,5 +1,6 @@
 import sys
 import os
+import subprocess
 import yaml
 
 ignore_folders = ['.git', '__pycache__', '.ipynb_checkpoints']
@@ -47,5 +48,13 @@ for (directory_path, directory_names, file_names) in os.walk(root_directory):
     os.chdir(f"{directory_path}")
     # Make sure all 6 SNOWFLAKE_ environment variables are set
     # SnowCLI accesses the passowrd directly from the SNOWFLAKE_PASSWORD environmnet variable
-    os.system(f"snow snowpark build --temporary-connection --account $SNOWFLAKE_ACCOUNT --user $SNOWFLAKE_USER --role $SNOWFLAKE_ROLE --warehouse $SNOWFLAKE_WAREHOUSE --database $SNOWFLAKE_DATABASE")
-    os.system(f"snow snowpark deploy --replace --temporary-connection --account $SNOWFLAKE_ACCOUNT --user $SNOWFLAKE_USER --role $SNOWFLAKE_ROLE --warehouse $SNOWFLAKE_WAREHOUSE --database $SNOWFLAKE_DATABASE")
+    connection_args = [
+        "--temporary-connection",
+        "--account", os.environ["SNOWFLAKE_ACCOUNT"],
+        "--user", os.environ["SNOWFLAKE_USER"],
+        "--role", os.environ["SNOWFLAKE_ROLE"],
+        "--warehouse", os.environ["SNOWFLAKE_WAREHOUSE"],
+        "--database", os.environ["SNOWFLAKE_DATABASE"],
+    ]
+    subprocess.run(["snow", "snowpark", "build", *connection_args], check=True)
+    subprocess.run(["snow", "snowpark", "deploy", "--replace", *connection_args], check=True)
